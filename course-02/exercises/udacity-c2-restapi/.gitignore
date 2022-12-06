@@ -35,6 +35,8 @@ logfile
 Thumbs.db
 UserInterfaceState.xcuserstate
 node_modules
+.env
+.env.*
 venv/
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

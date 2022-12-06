@@ -6,8 +6,10 @@
   "scripts": {
     "start": "node server.js",
     "tsc": "tsc",
-    "dev": "ts-node-dev ./src/server.ts",
-    "prod": "tsc && node ./www/server.js",
+    "migrate": "tsc ./src/config/config.ts && npx sequelize-cli db:migrate && rm -rf ./src/config/*.js",
+    "migrate-dev": "export NODE_ENV=development && npm run migrate",
+    "dev": "NODE_ENV=development ts-node-dev --project tsconfig.json ./src/server.ts",
+    "prod": "NODE_ENV=production tsc && node ./www/server.js",
     "clean": "rimraf www/ || true",
     "build": "npm run clean && tsc && cp -rf src/config www/config && cp .npmrc www/.npmrc && cp package.json www/package.json && cd www && zip -r Archive.zip . && cd ..",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -21,26 +23,29 @@
     "aws-sdk": "^2.492.0",
     "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
+    "dotenv": "^16.0.3",
     "email-validator": "^2.0.4",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
-    "pg": "^7.11.0",
+    "pg": "^8.8.0",
     "reflect-metadata": "^0.1.13",
     "sequelize": "^5.10.0",
     "sequelize-typescript": "^0.6.11"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.33",
-    "@types/express": "^4.17.9",
-    "@types/node": "^11.15.42",
-    "@types/sequelize": "^4.28.9",
-    "@types/validator": "^10.11.3",
+    "@types/express": "^4.17.1",
+    "@types/express-serve-static-core": "^4.17.31",
+    "@types/node": "^18.11.10",
+    "@types/sequelize": "^4.28.14",
+    "@types/validator": "13.7.10",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
     "mocha": "^6.2.3",
     "rimraf": "^3.0.2",
+    "sequelize-cli": "^6.5.2",
     "ts-node-dev": "^1.1.1",
     "tslint": "^5.20.1",
-    "typescript": "^3.9.7"
+    "typescript": "^4.1.2"
   }
 }
