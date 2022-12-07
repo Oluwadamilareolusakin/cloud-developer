@@ -9,8 +9,7 @@ import { V0MODELS } from "./controllers/v0/model.index";
 
 (async () => {
   await sequelize.addModels(V0MODELS);
-  // console.log(await sequelize.sync())
-  // await sequelize.sync();
+  await sequelize.sync();
 
   const app = express();
   const port = process.env.SERVER_PORT || 8080; // default port to listen
@@ -19,7 +18,7 @@ import { V0MODELS } from "./controllers/v0/model.index";
 
   //CORS Should be restricted
   app.use(function (req: Request, res: Response, next: () => void) {
-    res.header("Access-Control-Allow-Origin", "http://localhost:8100");
+    // res.header("Access-Control-Allow-Origin", "http://localhost:8100");
     res.header(
       "Access-Control-Allow-Headers",
       "Origin, X-Requested-With, Content-Type, Accept, Authorization"
