@@ -23,7 +23,15 @@ import { filterImageFromURL, deleteLocalFiles } from "./util/util";
 
     let filePath = await filterImageFromURL(image_url);
 
-    res.status(200).sendFile(filePath);
+    res.status(200).sendFile(filePath, (err) => {
+      if (err) {
+        res
+          .status(200)
+          .send({ message: "Could not filter that image, sorry!" });
+      }
+
+      deleteLocalFiles([filePath]);
+    });
   });
 
   // Root Endpoint
