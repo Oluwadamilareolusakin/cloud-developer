@@ -1,9 +1,9 @@
-import React, { Component } from 'react'
-import { GroupsList } from './components/GroupsList'
-import { BrowserRouter as Router, Link, Route, Switch } from 'react-router-dom'
-import { Grid, Menu, Segment } from 'semantic-ui-react'
-import { NotFound } from './components/NotFound'
-import { CreateGroup } from './components/CreateGroup'
+import React, { Component } from "react";
+import { GroupsList } from "./components/GroupsList";
+import { BrowserRouter as Router, Link, Route, Routes } from "react-router-dom";
+import { Grid, Menu, Segment } from "semantic-ui-react";
+import { NotFound } from "./components/NotFound";
+import { CreateGroup } from "./components/CreateGroup";
 
 export interface AppProps {}
 export interface AppState {}
@@ -12,7 +12,7 @@ export default class App extends Component<AppProps, AppState> {
   render() {
     return (
       <div>
-        <Segment style={{ padding: '8em 0em' }} vertical>
+        <Segment style={{ padding: "8em 0em" }} vertical>
           <Grid container stackable verticalAlign="middle">
             <Grid.Row>
               <Grid.Column width={16}>
@@ -26,7 +26,7 @@ export default class App extends Component<AppProps, AppState> {
           </Grid>
         </Segment>
       </div>
-    )
+    );
   }
 
   generateMenu() {
@@ -36,18 +36,18 @@ export default class App extends Component<AppProps, AppState> {
           <Link to="/">Home</Link>
         </Menu.Item>
       </Menu>
-    )
+    );
   }
 
   generateCurrentPage() {
     return (
-      <Switch>
-        <Route path="/groups/create" exact component={CreateGroup} />
+      <Routes>
+        <Route path="/groups/create" element={<CreateGroup />} />
 
-        <Route path="/" exact component={GroupsList} />
+        <Route path="/" element={<GroupsList />} />
 
-        <Route component={NotFound} />
-      </Switch>
-    )
+        <Route element={<NotFound />} />
+      </Routes>
+    );
   }
 }
