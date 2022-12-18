@@ -1,13 +1,13 @@
-import * as React from 'react'
-import { Form, Button } from 'semantic-ui-react'
-import { createGroup } from '../api/groups-api'
+import * as React from "react";
+import { Form, Button } from "semantic-ui-react";
+import { createGroup } from "../api/groups-api";
 
 interface CreateGroupProps {}
 
 interface CreateGroupState {
-  name: string
-  description: string
-  uploadingGroup: boolean
+  name: string;
+  description: string;
+  uploadingGroup: boolean;
 }
 
 export class CreateGroup extends React.PureComponent<
@@ -15,48 +15,48 @@ export class CreateGroup extends React.PureComponent<
   CreateGroupState
 > {
   state: CreateGroupState = {
-    name: '',
-    description: '',
-    uploadingGroup: false
-  }
+    name: "",
+    description: "",
+    uploadingGroup: false,
+  };
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ name: event.target.value })
-  }
+    this.setState({ name: event.target.value });
+  };
 
   handleDescriptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ description: event.target.value })
-  }
+    this.setState({ description: event.target.value });
+  };
 
   handleSubmit = async (event: React.SyntheticEvent) => {
-    event.preventDefault()
+    event.preventDefault();
 
     try {
       if (!this.state.name || !this.state.description) {
-        alert('Name and description should be provided')
-        return
+        alert("Name and description should be provided");
+        return;
       }
 
-      this.setUploadState(true)
+      this.setUploadState(true);
       const group = await createGroup({
         name: this.state.name,
-        description: this.state.description
-      })
+        description: this.state.description,
+      });
 
-      console.log('Created description', group)
+      console.log("Created description", group);
 
-      alert('Group was created!')
-    } catch (e) {
-      alert('Could not upload an image: ' + e.message)
+      alert("Group was created!");
+    } catch (e: any) {
+      alert("Could not upload an image: " + e.message);
     } finally {
-      this.setUploadState(false)
+      this.setUploadState(false);
     }
-  }
+  };
 
   setUploadState(uploadingGroup: boolean) {
     this.setState({
-      uploadingGroup
-    })
+      uploadingGroup,
+    });
   }
 
   render() {
@@ -84,7 +84,7 @@ export class CreateGroup extends React.PureComponent<
           {this.renderButton()}
         </Form>
       </div>
-    )
+    );
   }
 
   renderButton() {
@@ -92,6 +92,6 @@ export class CreateGroup extends React.PureComponent<
       <Button loading={this.state.uploadingGroup} type="submit">
         Create
       </Button>
-    )
+    );
   }
 }
