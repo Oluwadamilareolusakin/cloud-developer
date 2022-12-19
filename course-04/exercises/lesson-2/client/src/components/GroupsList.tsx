@@ -4,13 +4,13 @@ import { Group } from "./Group";
 import { getGroups } from "../api/groups-api";
 import { Card, Button, Divider } from "semantic-ui-react";
 import { History } from "history";
+import { Navigate } from "react-router-dom";
 
-interface GroupsListProps {
-  history?: History;
-}
+interface GroupsListProps {}
 
 interface GroupsListState {
   groups: GroupModel[];
+  redirect: Boolean;
 }
 
 export class GroupsList extends React.PureComponent<
@@ -19,10 +19,13 @@ export class GroupsList extends React.PureComponent<
 > {
   state: GroupsListState = {
     groups: [],
+    redirect: false,
   };
 
   handleCreateGroup = () => {
-    this.props.history?.push(`/groups/create`);
+    this.setState({
+      redirect: true,
+    });
   };
 
   async componentDidMount() {
@@ -40,6 +43,7 @@ export class GroupsList extends React.PureComponent<
     return (
       <div>
         <h1>Groups</h1>
+        {this.state.redirect && <Navigate to="/groups/create" replace={true} />}
 
         <Button
           primary
@@ -49,9 +53,7 @@ export class GroupsList extends React.PureComponent<
         >
           Create new group
         </Button>
-
         <Divider clearing />
-
         <Card.Group>
           {this.state.groups.map((group) => {
             return <Group key={group.id} group={group} />;
