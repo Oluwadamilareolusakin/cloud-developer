@@ -7,8 +7,7 @@ const todoFilesBucket = process.env.ATTACHMENT_S3_BUCKET
 const urlExpiration = process.env.SIGNED_URL_EXPIRATION
 // TODO: Handle Errors
 
-export class AttachmentUtils {
-  generateUploadUrl(Key: string) {
+  export const generateUploadUrl = (Key: string) => {
     const Bucket = todoFilesBucket
     const Expires = urlExpiration
 
@@ -20,4 +19,3 @@ export class AttachmentUtils {
 
     return S3Client.getSignedUrl('putObject', params)
   }
-}
