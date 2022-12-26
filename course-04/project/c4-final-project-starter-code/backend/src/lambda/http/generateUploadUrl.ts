@@ -2,7 +2,8 @@ import 'source-map-support/register'
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import middy from '@middy/core'
-import { cors, httpErrorHandler } from 'middy/middlewares'
+import httpErrorHandler from '@middy/http-error-handler'
+import cors from '@middy/http-cors'
 
 import { generateUploadUrl } from '../../helpers/attachmentUtils'
 import { getUserId } from '../utils'

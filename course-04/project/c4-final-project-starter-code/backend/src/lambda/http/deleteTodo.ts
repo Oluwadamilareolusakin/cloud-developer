@@ -2,7 +2,8 @@ import 'source-map-support/register'
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import middy from '@middy/core'
-import { cors, httpErrorHandler } from 'middy/middlewares'
+import cors from '@middy/http-cors'
+import httpErrorHandler from '@middy/http-error-handler'
 import Todos from '../../helpers/todos'
 
 import { getUserId } from '../utils'
