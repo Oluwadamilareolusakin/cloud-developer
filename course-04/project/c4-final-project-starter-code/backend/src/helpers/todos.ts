@@ -16,22 +16,22 @@ export default class Todos {
     this.TodosClient = new TodosAccess()
   }
 
-  getTodos(userId: string) {
-    return this.TodosClient.getTodosForUser(userId)
+  async getTodos(userId: string) {
+    return await this.TodosClient.getTodosForUser(userId)
   }
 
-  createTodo(
+  async createTodo(
     userId: string,
     attributes: CreateTodoRequest,
     attachmentUrl?: string
-  ): TodoItem {
+  ): Promise<TodoItem> {
     try {
       const todoId = uuid()
 
       const todoItem = {
         todoId,
         userId,
-        createdAt: timestamp(),
+        timestamp: timestamp(),
         attachmentUrl,
         done: false,
         ...attributes
@@ -43,7 +43,7 @@ export default class Todos {
           attachmentUrl
         }}`
       )
-      return this.TodosClient.createItem(todoItem)
+      return await this.TodosClient.createItem(todoItem)
     } catch (e) {
       this.log(`Failed to create todo: ${e.message}`)
 
@@ -51,20 +51,20 @@ export default class Todos {
     }
   }
 
-  updateTodo(id: string, userId: string, todo: UpdateTodoRequest): void {
+  async updateTodo(id: string, userId: string, todo: UpdateTodoRequest) {
     try {
       this.log(`Updating todo with id ${id}, attributes: ${todo}`)
-      this.TodosClient.updateItem(id, userId, todo)
+      await this.TodosClient.updateItem(id, userId, todo)
     } catch (e) {
       this.log(`Failed to update todo with id ${id}: ${e.message}`)
       throw new Error(`Failed to update todo with id ${id}: ${e.message}`)
     }
   }
 
-  deleteTodo(todoId: string, userId: string) {
+  async deleteTodo(todoId: string, userId: string) {
     try {
       this.log(`Deleting todo with id ${todoId} for user with id ${userId}`)
-      this.TodosClient.deleteItem(todoId, userId)
+      await this.TodosClient.deleteItem(todoId, userId)
     } catch (e) {
       this.log(`Failed to delete todo with id ${todoId}`)
       throw e
