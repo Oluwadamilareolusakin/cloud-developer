@@ -11,10 +11,15 @@ import { getUserId } from '../utils'
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     // Write your code here
-    const todos = new Todos()
+    const todoHelper = new Todos()
     const userId = getUserId(event)
 
-    const results = todos.getTodos(userId)
+    const todos = await todoHelper.getTodos(userId)
+
+    const results = {
+      type: 'todos',
+      objects: todos
+    }
 
     return {
       statusCode: 200,

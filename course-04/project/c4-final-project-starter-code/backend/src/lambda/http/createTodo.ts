@@ -13,7 +13,7 @@ export const handler = middy(
     const todos = new Todos()
 
     try {
-      const todo = todos.createTodo(userId, newTodo)
+      const todo = await todos.createTodo(userId, newTodo)
 
       return {
         statusCode: 201,

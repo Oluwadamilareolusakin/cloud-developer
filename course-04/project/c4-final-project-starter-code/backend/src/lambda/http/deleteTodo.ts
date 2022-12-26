@@ -16,7 +16,7 @@ export const handler = middy(
     try {
       const todos = new Todos()
 
-      todos.deleteTodo(todoId, userId)
+      await todos.deleteTodo(todoId, userId)
 
       return {
         statusCode: 200,
