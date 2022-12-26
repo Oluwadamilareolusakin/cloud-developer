@@ -16,7 +16,7 @@ const todoTableName = process.env.TODO_TABLE
 // takes a todo item
 // puts it into the db
 
-export default class TodosAccess {
+export class TodosAccess {
   documentClient: DocumentClient
 
   constructor() {
@@ -31,6 +31,8 @@ export default class TodosAccess {
         TableName: todoTableName,
         Item: item
       })
+
+      return item
     } catch (e) {
       this.handleError(e)
     }
