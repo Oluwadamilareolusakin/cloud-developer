@@ -23,15 +23,17 @@ export function parseUserId(jwtToken: string): string {
 async function getJWKPublicKey(kid: string): Promise<string> {
   const jwk = await getJWK(kid)
 
-  return jwk.publicKey
+  return formatJWK(jwk).publicKey
 }
 
 const getJWK = async (kid: string): Promise<JWK> => {
   const jwks = await getJWKS()
 
-  const result = jwks.find((jwk) => jwk.kid === kid)
+  const result = jwks.find((jwk) => {
+    return jwk.kid === kid
+  })
 
-  if (!!result) throwError('Invalid JWK')
+  if (!result) throwError('Invalid JWK')
 
   return result
 }
@@ -46,7 +48,7 @@ const getJWKS = async () => {
   let jwks = response.data.keys
 
   return jwks.filter((jwk) => {
-    if (validJWK(jwk)) return formattedJWK(jwk)
+    return validJWK(jwk)
   })
 }
 
@@ -63,10 +65,10 @@ const validJWK = (jwk) => {
   )
 }
 
-const formattedJWK = (jwk) => {
+const formatJWK = (jwk) => {
   return {
     kid: jwk.kid,
-    publicKey: certToPublicKey(jwk.x5c)
+    publicKey: certToPublicKey(jwk.x5c[0])
   }
 }
 
