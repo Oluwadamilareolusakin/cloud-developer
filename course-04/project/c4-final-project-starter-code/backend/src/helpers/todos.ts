@@ -8,14 +8,15 @@ import * as uuid from 'uuid'
 import * as createError from 'http-errors'
 import { timestamp } from './timestamp'
 
-// TODO: Implement businessLogic
 const logger = createLogger('Todos')
 
 export default class Todos {
   TodosClient: TodosAccess
+  AttachmentUtils: AttachmentUtils
 
   constructor() {
     this.TodosClient = new TodosAccess()
+    this.AttachmentUtils = new AttachmentUtils()
   }
 
   createTodo(
@@ -57,6 +58,11 @@ export default class Todos {
       this.log(`Failed to update todo with id ${id}`)
       throw createError(e)
     }
+  }
+
+  // Todo Handle Errors
+  generateUploadUrl(id: string) {
+    return this.AttachmentUtils.generateUploadUrl(id)
   }
 
   log(message, level = 'info') {

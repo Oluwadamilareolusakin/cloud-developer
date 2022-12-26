@@ -11,11 +11,6 @@ const logger = createLogger('TodosAccess')
 
 const todoTableName = process.env.TODO_TABLE
 
-// TODO: Implement the dataLayer logic
-
-// takes a todo item
-// puts it into the db
-
 export class TodosAccess {
   documentClient: DocumentClient
 
