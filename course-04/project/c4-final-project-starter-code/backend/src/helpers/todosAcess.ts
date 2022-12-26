@@ -35,16 +35,14 @@ export class TodosAccess {
   }
 
   getTodosForUser(userId: string) {
-    this.documentClient.query(
-      {
-        TableName: todoTableName,
-        IndexName: todoIndexName,
-        KeyConditionExpression: 'HashKey = :userId',
-        ExpressionAttributeValues: {
-          userId
-        }
+    this.documentClient.query({
+      TableName: todoTableName,
+      IndexName: todoIndexName,
+      KeyConditionExpression: 'HashKey = :userId',
+      ExpressionAttributeValues: {
+        userId
       }
-    )
+    })
   }
 
   updateItem(id: string, userId: string, item: TodoUpdate) {
@@ -63,12 +61,12 @@ export class TodosAccess {
     }
   }
 
-  deleteItem(id: string,userId: string) {
+  deleteItem(id: string, userId: string) {
     this.documentClient.delete({
       TableName: todoTableName,
       Key: { userId },
       ConditionExpression: 'id = :id',
-      ExpressionAttributeValues: {  id }
+      ExpressionAttributeValues: { id }
     })
   }
 
