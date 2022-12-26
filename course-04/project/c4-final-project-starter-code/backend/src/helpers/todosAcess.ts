@@ -58,12 +58,15 @@ export class TodosAccess {
           TableName: todoTableName,
           Key: { userId },
           ConditionExpression: 'id = :id',
-          UpdateExpression: `set name = :name, dueDate = :dueDate, done = :done`,
+          UpdateExpression: `set #name = :todoName, dueDate = :dueDate, done = :done`,
           ExpressionAttributeValues: {
-            ':name': item.name,
+            ':todoName': item.name,
             ':dueDate': item.dueDate,
             ':done': item.done,
             ':id': id
+          },
+          ExpressionAttributeNames: {
+            '#name': 'name'
           }
         })
         .promise()

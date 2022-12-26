@@ -43,7 +43,10 @@ export default class Todos {
           attachmentUrl
         }}`
       )
-      return await this.TodosClient.createItem(todoItem)
+
+      await this.TodosClient.createItem(todoItem)
+
+      return todoItem
     } catch (e) {
       this.log(`Failed to create todo: ${e.message}`)
 
