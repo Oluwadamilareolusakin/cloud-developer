@@ -1,22 +1,23 @@
 import { TodosAccess } from './todosAcess'
-import { AttachmentUtils } from './attachmentUtils'
+import { generateUploadUrl } from './attachmentUtils'
 import { TodoItem } from '../models/TodoItem'
 import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { createLogger } from '../utils/logger'
 import * as uuid from 'uuid'
-import * as createError from 'http-errors'
 import { timestamp } from './timestamp'
 
 const logger = createLogger('Todos')
 
 export default class Todos {
   TodosClient: TodosAccess
-  AttachmentUtils: AttachmentUtils
 
   constructor() {
     this.TodosClient = new TodosAccess()
-    this.AttachmentUtils = new AttachmentUtils()
+  }
+
+  getTodos(userId: string) {
+    return this.TodosClient.getTodosForUser(userId)
   }
 
   createTodo(
@@ -44,25 +45,35 @@ export default class Todos {
       )
       return this.TodosClient.createItem(todoItem)
     } catch (e) {
-      this.log(`Failed to create todo`)
+      this.log(`Failed to create todo: ${e.message}`)
 
-      throw createError(e)
+      throw new Error(`Failed to update todo with: ${e.message}`)
     }
   }
 
-  updateTodo(id: string, todo: UpdateTodoRequest): void {
+  updateTodo(id: string, userId: string, todo: UpdateTodoRequest): void {
     try {
       this.log(`Updating todo with id ${id}, attributes: ${todo}`)
-      this.TodosClient.updateItem(id, todo)
+      this.TodosClient.updateItem(id, userId, todo)
     } catch (e) {
-      this.log(`Failed to update todo with id ${id}`)
-      throw createError(e)
+      this.log(`Failed to update todo with id ${id}: ${e.message}`)
+      throw new Error(`Failed to update todo with id ${id}: ${e.message}`)
+    }
+  }
+
+  deleteTodo(todoId: string, userId: string) {
+    try {
+      this.log(`Deleting todo with id ${todoId} for user with id ${userId}`)
+      this.TodosClient.deleteItem(todoId, userId)
+    } catch (e) {
+      this.log(`Failed to delete todo with id ${todoId}`)
+      throw e
     }
   }
 
   // Todo Handle Errors
   generateUploadUrl(id: string) {
-    return this.AttachmentUtils.generateUploadUrl(id)
+    return generateUploadUrl(id)
   }
 
   log(message, level = 'info') {
