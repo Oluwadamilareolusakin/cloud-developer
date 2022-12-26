@@ -10,6 +10,7 @@ const XAWS = AWSXRay.captureAWS(AWS)
 const logger = createLogger('TodosAccess')
 
 const todoTableName = process.env.TODO_TABLE
+const todoIndexName = process.env.TODOS_USER_ID_INDEX
 
 export class TodosAccess {
   documentClient: DocumentClient
@@ -33,19 +34,42 @@ export class TodosAccess {
     }
   }
 
-  updateItem(id: string, item: TodoUpdate) {
+  getTodosForUser(userId: string) {
+    this.documentClient.query(
+      {
+        TableName: todoTableName,
+        IndexName: todoIndexName,
+        KeyConditionExpression: 'HashKey = :userId',
+        ExpressionAttributeValues: {
+          userId
+        }
+      }
+    )
+  }
+
+  updateItem(id: string, userId: string, item: TodoUpdate) {
     try {
       this.log(`Updating item with id ${id}, using params ${item}`)
 
       this.documentClient.update({
         TableName: todoTableName,
-        Key: { id },
+        Key: { id, userId },
+        ConditionExpression: 'id = :id',
         UpdateExpression: 'set name = :name, dueDate = :dueDate, done = :done',
-        ExpressionAttributeValues: { ...item }
+        ExpressionAttributeValues: { ...item, id }
       })
     } catch (e) {
       this.handleError(e)
     }
+  }
+
+  deleteItem(id: string,userId: string) {
+    this.documentClient.delete({
+      TableName: todoTableName,
+      Key: { userId },
+      ConditionExpression: 'id = :id',
+      ExpressionAttributeValues: {  id }
+    })
   }
 
   handleError(e: Error) {
