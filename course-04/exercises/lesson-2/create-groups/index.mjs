@@ -42,6 +42,8 @@ export const handler = async (event) => {
       body: JSON.stringify(body),
       headers: {
         "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type, content-type",
+        "Access-Control-Allow-Methods": "OPTIONS, POST",
       },
     };
     return response;
