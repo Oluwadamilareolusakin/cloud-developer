@@ -20,7 +20,7 @@ export const handler: CustomAuthorizerHandler = async (
   logger.info('Authorizing a user', event.authorizationToken)
   try {
     await verifyToken(event.authorizationToken)
-    const userId = parseUserId(event.authorizationToken)
+    const userId = parseUserId(getToken(event.authorizationToken))
     logger.info('User was authorized', userId)
 
     return {
