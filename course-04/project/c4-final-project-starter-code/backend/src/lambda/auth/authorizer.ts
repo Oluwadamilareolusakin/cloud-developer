@@ -3,16 +3,21 @@ import {
   CustomAuthorizerResult,
   CustomAuthorizerHandler
 } from 'aws-lambda'
+import * as AWS from 'aws-sdk'
 import 'source-map-support/register'
 
 import { createLogger } from '../../utils/logger'
-import { verifyJWK, parseUserId } from '../../auth/utils'
+import { parseUserId } from '../../auth/utils'
+import { verify } from 'jsonwebtoken'
 
 const logger = createLogger('auth')
 
 // TODO: Provide a URL that can be used to download a certificate that can be used
 // to verify JWT token signature.
 // To get this URL you need to go to an Auth0 page -> Show Advanced Settings -> Endpoints -> JSON Web Key Set
+//
+const secretsManager = new AWS.SecretsManager()
+const Auth0SecretId = process.env.AUTH0_SECRET_ID
 
 export const handler: CustomAuthorizerHandler = async (
   event: CustomAuthorizerEvent
@@ -57,8 +62,19 @@ export const handler: CustomAuthorizerHandler = async (
 
 async function verifyToken(authHeader: string) {
   const token = getToken(authHeader)
+  const secret = await getSecretAuth0()
 
-  await verifyJWK(token)
+  await verify(token, secret)
+}
+
+async function getSecretAuth0() {
+  const secret = await secretsManager
+    .getSecretValue({
+      SecretId: Auth0SecretId
+    })
+    .promise()
+
+  return secret.SecretString
 }
 
 function getToken(authHeader: string): string {
