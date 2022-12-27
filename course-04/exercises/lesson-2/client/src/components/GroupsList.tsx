@@ -1,35 +1,41 @@
-import * as React from 'react'
-import { GroupModel } from '../types/GroupModel'
-import { Group } from './Group'
-import { getGroups } from '../api/groups-api'
-import { Card, Button, Divider } from 'semantic-ui-react'
-import { History } from 'history'
+import * as React from "react";
+import { GroupModel } from "../types/GroupModel";
+import { Group } from "./Group";
+import { getGroups } from "../api/groups-api";
+import { Card, Button, Divider } from "semantic-ui-react";
+import { History } from "history";
+import { Navigate } from "react-router-dom";
 
-interface GroupsListProps {
-  history: History
-}
+interface GroupsListProps {}
 
 interface GroupsListState {
-  groups: GroupModel[]
+  groups: GroupModel[];
+  redirect: Boolean;
 }
 
-export class GroupsList extends React.PureComponent<GroupsListProps, GroupsListState> {
+export class GroupsList extends React.PureComponent<
+  GroupsListProps,
+  GroupsListState
+> {
   state: GroupsListState = {
-    groups: []
-  }
+    groups: [],
+    redirect: false,
+  };
 
   handleCreateGroup = () => {
-    this.props.history.push(`/groups/create`)
-  }
+    this.setState({
+      redirect: true,
+    });
+  };
 
   async componentDidMount() {
     try {
-      const groups = await getGroups()
+      const groups = await getGroups();
       this.setState({
-        groups
-      })
-    } catch (e) {
-      alert(`Failed to fetch groups: ${e.message}`)
+        groups,
+      });
+    } catch (e: any) {
+      alert(`Failed to fetch groups: ${e.message}`);
     }
   }
 
@@ -37,6 +43,7 @@ export class GroupsList extends React.PureComponent<GroupsListProps, GroupsListS
     return (
       <div>
         <h1>Groups</h1>
+        {this.state.redirect && <Navigate to="/groups/create" replace={true} />}
 
         <Button
           primary
@@ -46,15 +53,13 @@ export class GroupsList extends React.PureComponent<GroupsListProps, GroupsListS
         >
           Create new group
         </Button>
-
         <Divider clearing />
-
         <Card.Group>
-          {this.state.groups.map(group => {
-            return <Group key={group.id} group={group} />
+          {this.state.groups.map((group) => {
+            return <Group key={group.id} group={group} />;
           })}
         </Card.Group>
       </div>
-    )
+    );
   }
 }

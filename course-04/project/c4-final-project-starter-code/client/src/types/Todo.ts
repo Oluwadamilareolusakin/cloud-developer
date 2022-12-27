@@ -1,6 +1,6 @@
 export interface Todo {
   todoId: string
-  createdAt: string
+  timestamp: string
   name: string
   dueDate: string
   done: boolean

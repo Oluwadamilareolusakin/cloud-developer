@@ -1,5 +1,4 @@
-service:
-  name: serverless-udagram-app
+service: serverless-udagram-app
 
 plugins:
   - serverless-webpack
@@ -8,7 +7,7 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs16.x
 
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
@@ -17,6 +16,18 @@ provider:
     GROUPS_TABLE: Groups-${self:provider.stage}
     IMAGES_TABLE: Images-${self:provider.stage}
     IMAGE_ID_INDEX: ImageIdIndex
+    IMAGES_S3_BUCKET_REGION: ${opt:s3Region, self:provider.region}
+    REGION: ${self:provider.region}
+    IMAGES_S3_BUCKET: ${self:service}-bucket-${self:provider.stage}
+    IMAGES_S3_URL_EXPIRY: ${opt:s3UrlExpirty, 3600}
+    WEBSOCKETS_CONNECTION_TABLE: ${self:service}-websockets-table-${self:provider.stage}
+    AUTH0_TENANT_ID: https://dev-7vdkrp24711g5tqn.us.auth0.com
+    JWKS_ENDPOINT: .well-known/jwks.json
+    JWT_AUDIENCE: https://dev-7vdkrp24711g5tqn.us.auth0.com/api/v2/
+    JWT_ISSUER: https://dev-7vdkrp24711g5tqn.us.auth0.com/
+    STAGE: ${self:provider.stage}
+    IMAGE_THUMBNAILS_S3_BUCKET: ${self:service}-image-thumbnails-bucket-${self:provider.stage}
+    DUDE: dude
 
   iamRoleStatements:
     - Effect: Allow
@@ -27,14 +38,42 @@ provider:
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.GROUPS_TABLE}
     - Effect: Allow
       Action:
+        - dynamodb:Scan
         - dynamodb:Query
+        - dynamodb:PutItem
+        - dynamodb:DeleteItem
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.WEBSOCKETS_CONNECTION_TABLE}
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:PutItem
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.IMAGES_TABLE}
     - Effect: Allow
       Action:
         - dynamodb:Query
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.IMAGES_TABLE}/index/${self:provider.environment.IMAGE_ID_INDEX}
+    - Effect: Allow
+      Action: 
+        - s3:PutObject
+        - s3:GetObject
+      Resource:
+        - !Join
+          - ''
+          - - 'arn:aws:s3:::'
+            - ${self:provider.environment.IMAGES_S3_BUCKET}
+            - /*
+    - Effect: Allow
+      Action: 
+        - s3:PutObject
+        - s3:PutObject
+      Resource: 
+        - !Join
+          - ''
+          - - !GetAtt ImageThumbnailsBucket.Arn
+            - /*
 
 custom:
+  imageSnsTopicName: ${self:service}-image-sns-topic-${self:provider.stage}
   documentation:
     api:
       info:
@@ -45,8 +84,49 @@ custom:
       - name: GroupRequest
         contentType: application/json
         schema: ${file(models/create-group-request.json)}
+      - name: CreateImageRequest
+        contentType: application/json
+        schema: ${file(models/create-image-request.json)}
 
 functions:
+  Auth:
+    handler: src/lambda/auth/authorizer.handler
+  ResizeImages:
+    handler: src/lambda/s3/resizeImages.handler
+    events:
+      - sns:
+          arn: !Ref ImageSnsTopic
+          topicName: ${self:custom.imageSnsTopicName}
+
+  SendUploadNotification:
+    handler: src/lambda/s3/sendUploadNotification.handler
+    environment:
+      WEBSOCKETS_API_ID: !Ref WebsocketsApi
+    events:
+      - sns:
+          arn: !Ref ImageSnsTopic
+          topicName: ${self:custom.imageSnsTopicName}
+
+  ConnectHandler:
+    handler: src/lambda/websocket/connect.handler
+    events:
+      - websocket:
+          route: $connect
+
+  DisconnectHandler:
+    handler: src/lambda/websocket/disconnect.handler
+    events:
+      - websocket:
+         route: $disconnect
+
+  
+  defaultHandler:
+    handler: src/lambda/websocket/default.handler
+    events:
+      - websocket:
+          route: $default
+
+  
 
   GetGroups:
     handler: src/lambda/http/getGroups.handler
@@ -54,6 +134,8 @@ functions:
       - http:
           method: get
           path: groups
+          authorizer: Auth
+          reqValidatorName: RequestBodyValidator
           cors: true
 
   CreateGroup:
@@ -62,27 +144,63 @@ functions:
       - http:
           method: post
           path: groups
+          authorizer: Auth
           cors: true
-          reqValidatorName: RequestBodyValidator
           documentation:
             summary: Create a new group
             description: Create a new group
             requestModels:
               'application/json': GroupRequest
+          reqValidatorName: RequestBodyValidator
+    
 
   GetImages:
     handler: src/lambda/http/getImages.handler
     events:
       - http:
           method: get
+          authorizer: Auth
           path: groups/{groupId}/images
+          reqValidatorName: RequestBodyValidator
           cors: true
 
   CreateImage:
     handler: src/lambda/http/createImage.handler
+    events:
+      - http:
+          method: post
+          authorizer: Auth
+          path: groups/{groupId}/images
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new image for a group
+            description: Create a new image for a group
+            requestModels:
+              'application/json': CreateImageRequest 
 
 resources:
   Resources:
+    GatewayResponseDefault4xx:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allowed-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allowed-Headers: "'Content-Type,X-Amz-Date,Authorization'"
+          gatewayresponse.header.Access-Control-Allowed-Methods: "'POST,OPTIONS,GET'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          !Ref ApiGatewayRestApi
+    WebsocketsConnectionTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.WEBSOCKETS_CONNECTION_TABLE}
+        AttributeDefinitions:
+          - AttributeName: connectionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: connectionId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
     GroupsDynamoDBTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -94,6 +212,44 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.GROUPS_TABLE}
+    ImageThumbnailsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.IMAGE_THUMBNAILS_S3_BUCKET}
+        CorsConfiguration:
+          CorsRules:
+            -
+              AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+              AllowedMethods:
+                - GET
+                - PUT
+                - DELETE
+                - POST
+                - HEAD
+              MaxAge: 3000
+        
+    ImageThumbnailsBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Id: ${self:service}-ImageThumbnailsPolicy
+          Version: '2012-10-17'
+          Statement:
+            Sid: CreatePolicyForResizeLambdaFunction
+            Effect: 'Allow'
+            Action: s3:GetObject
+            Principal:
+              AWS: '*'
+            Resource:
+              - !Join
+                - ''
+                - - !GetAtt ImageThumbnailsBucket.Arn
+                  - /*
+        Bucket: !Ref ImageThumbnailsBucket
+
 
     ImagesDynamoDBTable:
       Type: "AWS::DynamoDB::Table"
@@ -101,9 +257,9 @@ resources:
         AttributeDefinitions:
           - AttributeName: groupId
             AttributeType: S
-          - AttributeName: timestamp
-            AttributeType: S
           - AttributeName: imageId
+            AttributeType: S
+          - AttributeName: timestamp
             AttributeType: S
         KeySchema:
           - AttributeName: groupId
@@ -128,4 +284,79 @@ resources:
           Ref: ApiGatewayRestApi
         ValidateRequestBody: true
         ValidateRequestParameters: false
+    ImageSnsTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:custom.imageSnsTopicName}
+        DisplayName: Images Create Topic
+
+    ImagesTopicPolicy:
+      Type: AWS::SNS::TopicPolicy
+      Properties:
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                AWS: "*"
+              Action: sns:Publish
+              Resource:
+                !Ref ImageSnsTopic
+              Condition:
+                ArnLike:
+                  AWS:SourceArn: !GetAtt ImagesBucket.Arn
+        Topics:
+          - !Ref ImageSnsTopic
+
+    ImagesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.IMAGES_S3_BUCKET}
+        NotificationConfiguration:
+          TopicConfigurations:
+            - Event: s3:ObjectCreated:Put
+              Topic: !Ref ImageSnsTopic
+        CorsConfiguration:
+          CorsRules:
+            -
+              AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+              AllowedMethods:
+                - GET
+                - PUT
+                - DELETE
+                - POST
+                - HEAD
+              MaxAge: 3000
+    ImagesBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Id: ${self:service}-ImagesBucketPolicy
+          Version: '2012-10-17'
+          Statement:
+            - Sid: PublicReadForImages
+              Principal: "*"
+              Effect: "Allow"
+              Action: 
+                - "s3:GetObject"
+              Resource: 
+                - !Join
+                  - ''
+                  - - 'arn:aws:s3:::'
+                    - !Ref ImagesBucket
+                    - /*
+        Bucket: !Ref ImagesBucket
+    SendUploadNotificationLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !Ref SendUploadNotificationLambdaFunction
+        Principal: s3.amazonaws.com
+        Action: lambda:InvokeFunction
+        SourceAccount: !Ref AWS::AccountId
+        SourceArn: "arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}"
+
+
 

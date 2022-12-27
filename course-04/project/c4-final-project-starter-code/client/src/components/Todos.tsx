@@ -55,16 +55,18 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         todos: [...this.state.todos, newTodo],
         newTodoName: ''
       })
-    } catch {
+    } catch (e) {
       alert('Todo creation failed')
     }
   }
 
   onTodoDelete = async (todoId: string) => {
     try {
+      const todo = this.state.todos.find((todo) => todo.todoId === todoId)
+      if (!todo) throw new Error()
       await deleteTodo(this.props.auth.getIdToken(), todoId)
       this.setState({
-        todos: this.state.todos.filter(todo => todo.todoId !== todoId)
+        todos: this.state.todos.filter((todo) => todo.todoId !== todoId)
       })
     } catch {
       alert('Todo deletion failed')
@@ -79,6 +81,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         dueDate: todo.dueDate,
         done: !todo.done
       })
+
       this.setState({
         todos: update(this.state.todos, {
           [pos]: { done: { $set: !todo.done } }
