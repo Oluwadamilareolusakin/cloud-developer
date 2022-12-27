@@ -34,11 +34,10 @@ export async function createTodo(
 export async function patchTodo(
   idToken: string,
   todoId: string,
-  updatedTodo: UpdateTodoRequest,
-  timestamp: string
+  updatedTodo: UpdateTodoRequest
 ): Promise<void> {
   await Axios.patch(
-    `${apiEndpoint}/todos/${todoId}?timestamp=${timestamp}`,
+    `${apiEndpoint}/todos/${todoId}`,
     JSON.stringify(updatedTodo),
     {
       headers: {
@@ -51,10 +50,9 @@ export async function patchTodo(
 
 export async function deleteTodo(
   idToken: string,
-  todoId: string,
-  timestamp: string
+  todoId: string
 ): Promise<void> {
-  await Axios.delete(`${apiEndpoint}/todos/${todoId}?timestamp=${timestamp}`, {
+  await Axios.delete(`${apiEndpoint}/todos/${todoId}`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${idToken}`
