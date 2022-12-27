@@ -26,6 +26,8 @@ provider:
     JWKS_ENDPOINT: https://dev-7vdkrp24711g5tqn.us.auth0.com/.well-known/jwks.json
     AUTH0_ISSUER: https://dev-7vdkrp24711g5tqn.us.auth0.com/
     AUTH0_AUDIENCE: https://dev-7vdkrp24711g5tqn.us.auth0.com/api/v2/
+    AUTH0_SECRET_ID: Auth0ClientSecret
+    AUTH0_SECRET_FIELD: Auth0ClientSecretValue
 
   logs:
     # Enable API Gateway logs
@@ -45,6 +47,16 @@ functions:
 
   Authorizer:
     handler: src/lambda/auth/authorizer.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action: 
+          - secretsmanager:GetSecretValue
+        Resource: !Ref Auth0Secret
+      - Effect: Allow
+        Action:
+          - kms:Decrypt
+        Resource: !GetAtt Auth0KMSKey.Arn
+
 
   GetTodos:
     handler: src/lambda/http/getTodos.handler
@@ -173,6 +185,40 @@ resources:
           gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
           gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
           gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
+
+    Auth0Secret:
+      Type: AWS::SecretsManager::Secret
+      Properties: 
+        Description: Auth0 Client Secret
+        KmsKeyId: !Ref Auth0KMSKey
+        Name: ${self:provider.environment.AUTH0_SECRET_ID}
+
+    Auth0KMSKeyAlias:
+      Type: AWS::KMS::Alias
+      Properties:
+        AliasName: Auth0KMSKey
+        TargetKeyId: !Ref Auth0KMSKey
+
+    Auth0KMSKey:
+      Type: AWS::KMS::Key
+      Properties:
+        Description: Encryption key for Auth0 Secret
+        KeyPolicy:
+          Version: '2012-10-17'
+          Id: auth0-kms-admin-policy
+          Statement:
+            - Effect: Allow
+              Sid: Auth0KeyAdminAccess
+              Principal:
+                AWS: arn:aws:iam::${AWS::AccountId}:root
+                  - !Join
+                    - ':'
+                    - - 'aws:arn:iam:'
+                      - !Ref AWS::AccountId
+                      - root
+              Action: 
+                - 'kms:*'
+              Resource: '*'
     
     #Create a DynamoDB table with local secondary index and a composite key
     TodosTable:
