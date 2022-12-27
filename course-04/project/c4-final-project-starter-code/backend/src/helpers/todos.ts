@@ -1,5 +1,4 @@
 import { TodosAccess } from './todosAcess'
-import { generateUploadUrl } from './attachmentUtils'
 import { TodoItem } from '../models/TodoItem'
 import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
@@ -77,11 +76,6 @@ export default class Todos {
       this.log(`Failed to delete todo with id ${todoId}`)
       throw e
     }
-  }
-
-  // Todo Handle Errors
-  generateUploadUrl(id: string) {
-    return generateUploadUrl(id)
   }
 
   log(message, level = 'info') {
