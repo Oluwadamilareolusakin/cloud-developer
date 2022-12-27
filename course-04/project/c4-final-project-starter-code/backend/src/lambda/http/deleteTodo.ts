@@ -11,13 +11,12 @@ import { getUserId } from '../utils'
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId
-    const timestamp = event.queryStringParameters.timestamp
     const userId = getUserId(event)
 
     try {
       const todos = new Todos()
 
-      await todos.deleteTodo(todoId, timestamp, userId)
+      await todos.deleteTodo(todoId, userId)
 
       return {
         statusCode: 200,
