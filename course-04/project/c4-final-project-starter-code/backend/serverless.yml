@@ -28,6 +28,7 @@ provider:
     AUTH0_AUDIENCE: https://dev-7vdkrp24711g5tqn.us.auth0.com/api/v2/
     AUTH0_SECRET_ID: Auth0ClientSecret
     AUTH0_SECRET_FIELD: Auth0ClientSecretValue
+    ATTACHMENT_S3_BUCKET_URL: https://${self:provider.environment.ATTACHMENT_S3_BUCKET}.s3.amazonaws.com
 
   logs:
     # Enable API Gateway logs
@@ -164,6 +165,19 @@ functions:
           path: todos/{todoId}/attachment
           authorizer: Authorizer
     iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - 'dynamodb:UpdateItem'
+        Resource: !GetAtt TodosTable.Arn
+      - Effect: Allow
+        Action:
+          - 'dynamodb:Query'
+        Resource:
+          - !Join
+            - ''
+            - - !GetAtt TodosTable.Arn
+              - /index/
+              - ${self:provider.environment.TODOS_USER_ID_INDEX}
       - Action:
           - 's3:GetObject'
           - 's3:PutObject'
@@ -232,12 +246,12 @@ resources:
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
-          - AttributeName: timestamp
+          - AttributeName: todoId
             AttributeType: S
         KeySchema:
           - AttributeName: userId
             KeyType: 'HASH'
-          - AttributeName: timestamp
+          - AttributeName: todoId
             KeyType: 'RANGE'
         BillingMode: PAY_PER_REQUEST
         LocalSecondaryIndexes:
@@ -245,11 +259,10 @@ resources:
             KeySchema:
               - AttributeName: userId
                 KeyType: 'HASH'
-              - AttributeName: timestamp
+              - AttributeName: todoId
                 KeyType: 'RANGE'
             Projection:
               ProjectionType: ALL
-
 
     # Do not forget to add the CorsConfiguration propoerty
     AttachmentsBucket:
