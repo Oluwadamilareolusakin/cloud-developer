@@ -11,9 +11,11 @@ import { getUserId } from '../utils'
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId
+    const body = JSON.parse(event.body)
+    const { filename, filetype } = body
     const userId = getUserId(event)
-    const key = `${userId}-${todoId}`
-    const uploadUrl = generateUploadUrl(key)
+    const key = `${userId}/${todoId}/${filename}`
+    const uploadUrl = generateUploadUrl(key, filetype)
     return {
       statusCode: 200,
       body: JSON.stringify({
