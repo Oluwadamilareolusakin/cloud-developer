@@ -168,7 +168,11 @@ functions:
           - 's3:GetObject'
           - 's3:PutObject'
         Effect: Allow
-        Resource: !GetAtt AttachmentsBucket.Arn
+        Resource:
+          - !Join
+            - ''
+            - - !GetAtt AttachmentsBucket.Arn
+              - /*
 
 resources:
   Resources:
@@ -196,7 +200,7 @@ resources:
     Auth0KMSKeyAlias:
       Type: AWS::KMS::Alias
       Properties:
-        AliasName: Auth0KMSKey
+        AliasName: alias/Auth0KMSKey-${self:provider.stage}
         TargetKeyId: !Ref Auth0KMSKey
 
     Auth0KMSKey:
@@ -210,10 +214,10 @@ resources:
             - Effect: Allow
               Sid: Auth0KeyAdminAccess
               Principal:
-                AWS: arn:aws:iam::${AWS::AccountId}:root
+                AWS: 
                   - !Join
                     - ':'
-                    - - 'aws:arn:iam:'
+                    - - 'arn:aws:iam:'
                       - !Ref AWS::AccountId
                       - root
               Action: 
@@ -254,20 +258,26 @@ resources:
         BucketName: ${self:provider.environment.ATTACHMENT_S3_BUCKET}
         CorsConfiguration:
           CorsRules:
-            - AllowedHeaders: 
+            -
+              AllowedHeaders: 
                 - '*'
               AllowedMethods: 
-                - 'GET'
+                - GET
+                - PUT
+                - DELETE
+                - POST
+                - HEAD
               AllowedOrigins: 
                 - '*'
-              MaxAge: 3600
+                - 'http://localhost:3000/'
+              MaxAge: 3000
 
     # TODO: Complete the policy below and attach it to the bucket defined above
     # For cross referencing the name of the bucket, use "!Ref AttachmentsBucket"
     BucketPolicy:
       Type: AWS::S3::BucketPolicy
       Properties:
-        Bucket: ${self:provider.environment.ATTACHMENT_S3_BUCKET}
+        Bucket: !Ref AttachmentsBucket
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
