@@ -37,27 +37,36 @@ export class TodosAccess {
   }
 
   async getTodosForUser(userId: string) {
-    await this.documentClient
+    const result = await this.documentClient
       .query({
         TableName: todoTableName,
         IndexName: todoIndexName,
-        KeyConditionExpression: `HashKey = :userId`,
+        KeyConditionExpression: `userId = :userId`,
         ExpressionAttributeValues: {
           ':userId': userId
         }
       })
       .promise()
+
+    return result.Items
   }
 
-  async updateItem(id: string, userId: string, item: TodoUpdate) {
+  async updateItem(
+    id: string,
+    userId: string,
+    timestamp: string,
+    item: TodoUpdate
+  ) {
     try {
-      this.log(`Updating item with id ${id}, using params ${item}`)
+      this.log(
+        `Updating item with id ${id}, for user: ${userId} using params ${item}`
+      )
 
       await this.documentClient
         .update({
           TableName: todoTableName,
-          Key: { userId },
-          ConditionExpression: 'id = :id',
+          Key: { userId, timestamp },
+          ConditionExpression: 'todoId = :id',
           UpdateExpression: `set #name = :todoName, dueDate = :dueDate, done = :done`,
           ExpressionAttributeValues: {
             ':todoName': item.name,
@@ -75,13 +84,13 @@ export class TodosAccess {
     }
   }
 
-  async deleteItem(id: string, userId: string) {
+  async deleteItem(id: string, timestamp: string, userId: string) {
     await this.documentClient
       .delete({
         TableName: todoTableName,
-        Key: { userId },
-        ConditionExpression: `id = :id`,
-        ExpressionAttributeValues: { id }
+        Key: { userId, timestamp },
+        ConditionExpression: `todoId = :id`,
+        ExpressionAttributeValues: { ':id': id }
       })
       .promise()
   }

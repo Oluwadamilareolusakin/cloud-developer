@@ -12,12 +12,13 @@ import Todos from '../../helpers/todos'
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId
+    const timestamp = event.queryStringParameters.timestamp
     const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
     const userId: string = getUserId(event)
 
     const todosHelper = new Todos()
 
-    await todosHelper.updateTodo(todoId, userId, updatedTodo)
+    await todosHelper.updateTodo(todoId, userId, timestamp, updatedTodo)
 
     return {
       statusCode: 204,

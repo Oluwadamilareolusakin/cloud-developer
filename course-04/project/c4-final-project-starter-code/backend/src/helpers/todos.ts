@@ -54,20 +54,25 @@ export default class Todos {
     }
   }
 
-  async updateTodo(id: string, userId: string, todo: UpdateTodoRequest) {
+  async updateTodo(
+    id: string,
+    userId: string,
+    timestamp: string,
+    todo: UpdateTodoRequest
+  ) {
     try {
       this.log(`Updating todo with id ${id}, attributes: ${todo}`)
-      await this.TodosClient.updateItem(id, userId, todo)
+      await this.TodosClient.updateItem(id, userId, timestamp, todo)
     } catch (e) {
       this.log(`Failed to update todo with id ${id}: ${e.message}`)
       throw new Error(`Failed to update todo with id ${id}: ${e.message}`)
     }
   }
 
-  async deleteTodo(todoId: string, userId: string) {
+  async deleteTodo(todoId: string, timestamp: string, userId: string) {
     try {
       this.log(`Deleting todo with id ${todoId} for user with id ${userId}`)
-      await this.TodosClient.deleteItem(todoId, userId)
+      await this.TodosClient.deleteItem(todoId, timestamp, userId)
     } catch (e) {
       this.log(`Failed to delete todo with id ${todoId}`)
       throw e

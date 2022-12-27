@@ -11,12 +11,13 @@ import { getUserId } from '../utils'
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId
+    const timestamp = event.queryStringParameters.timestamp
     const userId = getUserId(event)
 
     try {
       const todos = new Todos()
 
-      await todos.deleteTodo(todoId, userId)
+      await todos.deleteTodo(todoId, timestamp, userId)
 
       return {
         statusCode: 200,
@@ -24,7 +25,7 @@ export const handler = middy(
       }
     } catch (e) {
       let statusCode = 400
-      if (e.message.contains('Not found')) statusCode = 404
+      if (e.message.includes('Not found')) statusCode = 404
       return {
         statusCode,
         body: e.message
