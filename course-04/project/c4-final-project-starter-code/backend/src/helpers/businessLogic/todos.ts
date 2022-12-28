@@ -1,10 +1,10 @@
-import { TodosAccess } from './todosAcess'
-import { TodoItem } from '../models/TodoItem'
-import { CreateTodoRequest } from '../requests/CreateTodoRequest'
-import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
-import { createLogger } from '../utils/logger'
+import { TodosAccess } from '../dataLayer/todosAcess'
+import { TodoItem } from '../../models/TodoItem'
+import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
+import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
+import { createLogger } from '../../utils/logger'
 import * as uuid from 'uuid'
-import { timestamp } from './timestamp'
+import { timestamp } from '../timestamp'
 
 const logger = createLogger('Todos')
 
