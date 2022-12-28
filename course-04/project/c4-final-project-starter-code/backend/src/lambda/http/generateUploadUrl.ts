@@ -5,9 +5,9 @@ import middy from '@middy/core'
 import httpErrorHandler from '@middy/http-error-handler'
 import cors from '@middy/http-cors'
 
-import { generateUploadUrl } from '../../helpers/attachmentUtils'
+import { generateUploadUrl } from '../../helpers/businessLogic/images'
 import { getUserId } from '../utils'
-import Todos from '../../helpers/todos'
+import Todos from '../../helpers/businessLogic/todos'
 
 const bucketUrl = process.env.ATTACHMENT_S3_BUCKET_URL
 

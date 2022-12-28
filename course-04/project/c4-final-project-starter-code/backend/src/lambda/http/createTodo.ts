@@ -4,7 +4,7 @@ import middy from '@middy/core'
 import cors from '@middy/http-cors'
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
 import { getUserId } from '../utils'
-import Todos from '../../helpers/todos'
+import Todos from '../../helpers/businessLogic/todos'
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -13,6 +13,10 @@ export const handler = middy(
     const todos = new Todos()
 
     try {
+      if (newTodo.name.length === 0 || newTodo.dueDate.length === 0)
+        throw new Error(
+          'Invalid parameters, ensure you enter a name and due date'
+        )
       const todo = await todos.createTodo(userId, newTodo)
 
       return {
@@ -21,7 +25,7 @@ export const handler = middy(
       }
     } catch (e) {
       return {
-        statusCode: 201,
+        statusCode: 400,
         body: e.message
       }
     }
