@@ -63,7 +63,7 @@ export async function deleteTodo(
 export async function getUploadUrl(
   idToken: string,
   todoId: string,
-  file: Buffer
+  file: File
 ): Promise<string> {
   const response = await Axios.post(
     `${apiEndpoint}/todos/${todoId}/attachment`,
@@ -81,9 +81,6 @@ export async function getUploadUrl(
   return response.data.uploadUrl
 }
 
-export async function uploadFile(
-  uploadUrl: string,
-  file: Buffer
-): Promise<void> {
+export async function uploadFile(uploadUrl: string, file: File): Promise<void> {
   await Axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } })
 }
